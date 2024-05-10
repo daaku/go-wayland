@@ -23,13 +23,12 @@ type appState struct {
 	exit          bool
 	skipDraw      bool
 
-	display     *client.Display
-	registry    *client.Registry
-	shm         *client.Shm
-	compositor  *client.Compositor
-	xdgWmBase   *xdg_shell.WmBase
-	seat        *client.Seat
-	seatVersion uint32
+	display    *client.Display
+	registry   *client.Registry
+	shm        *client.Shm
+	compositor *client.Compositor
+	xdgWmBase  *xdg_shell.WmBase
+	seat       *client.Seat
 
 	surface     *client.Surface
 	xdgSurface  *xdg_shell.Surface
@@ -195,7 +194,6 @@ func (app *appState) HandleRegistryGlobal(e client.RegistryGlobalEvent) {
 			log.Fatalf("unable to bind wl_seat interface: %v", err)
 		}
 		app.seat = seat
-		app.seatVersion = e.Version
 		// Add Keyboard
 		seat.SetCapabilitiesHandler(app.HandleSeatCapabilities)
 		seat.SetNameHandler(app.HandleSeatName)
