@@ -21,6 +21,7 @@ type appState struct {
 	width, height int32
 	frame         *image.RGBA
 	exit          bool
+	skipDraw      bool
 
 	display     *client.Display
 	registry    *client.Registry
@@ -51,7 +52,7 @@ func main() {
 	}
 
 	// Resize again, for first frame
-	frameImage := resize.Resize(0, 480, pImage, resize.NearestNeighbor).(*image.RGBA)
+	frameImage := resize.Resize(0, uint(pImage.Rect.Dy()), pImage, resize.NearestNeighbor).(*image.RGBA)
 	frameRect := frameImage.Bounds()
 
 	app := &appState{
@@ -211,6 +212,10 @@ func (app *appState) HandleSurfaceConfigure(e xdg_shell.SurfaceConfigureEvent) {
 		log.Fatal("unable to ack xdg surface configure")
 	}
 
+	if app.skipDraw {
+		return
+	}
+
 	// Draw frame
 	buffer := app.drawFrame()
 
@@ -251,6 +256,7 @@ func (app *appState) HandleToplevelConfigure(e xdg_shell.ToplevelConfigureEvent)
 
 func (app *appState) drawFrame() *client.Buffer {
 	logPrintln("drawing frame")
+	app.skipDraw = true
 
 	stride := app.width * 4
 	size := stride * app.height
