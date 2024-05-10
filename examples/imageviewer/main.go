@@ -63,7 +63,7 @@ func main() {
 	app := &appState{
 		// Set the title to `cat.jpg - imageviewer`
 		title: fileName + " - imageviewer",
-		appID: "imageviewer",
+		appID: "osd_imageviewer",
 		// Keep proxy image in cache, for use in resizing
 		pImage: pImage,
 		width:  int32(frameRect.Dx()),
