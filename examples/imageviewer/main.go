@@ -56,7 +56,7 @@ func run() error {
 	// Read the image file to *image.RGBA
 	pImage, err := rgbaImageFromFile(fileName)
 	if err != nil {
-		log.Fatal(err)
+		return errors.WithStack(err)
 	}
 
 	// Resize again, for first frame
@@ -74,7 +74,9 @@ func run() error {
 		frame:  frameImage,
 	}
 
-	app.initWindow()
+	if err := app.initWindow(); err != nil {
+		return err
+	}
 
 	// Start the dispatch loop
 	for !app.exit {
@@ -86,78 +88,58 @@ func run() error {
 	return nil
 }
 
-func (app *appState) initWindow() {
-	// Connect to wayland server
+func (app *appState) initWindow() error {
 	display, err := client.Connect("")
 	if err != nil {
-		log.Fatalf("unable to connect to wayland server: %v", err)
+		return errors.Errorf("unable to connect to wayland server: %v", err)
 	}
 	app.display = display
-
 	display.SetErrorHandler(app.HandleDisplayError)
 
-	// Get global interfaces registry
 	registry, err := app.display.GetRegistry()
 	if err != nil {
-		log.Fatalf("unable to get global registry object: %v", err)
+		return errors.WithStack(err)
 	}
 	app.registry = registry
 
-	// Add global interfaces registrar handler
 	registry.SetGlobalHandler(app.HandleRegistryGlobal)
-	// Wait for interfaces to register
-	app.displayRoundTrip()
-	// Wait for handler events
-	app.displayRoundTrip()
-
-	logPrintln("all interfaces registered")
+	app.displayRoundTrip() // Wait for interfaces to register
+	app.displayRoundTrip() // Wait for handler events
 
 	// Create a wl_surface for toplevel window
 	surface, err := app.compositor.CreateSurface()
 	if err != nil {
-		log.Fatalf("unable to create compositor surface: %v", err)
+		return errors.WithStack(err)
 	}
 	app.surface = surface
-	logPrintln("created new wl_surface")
 
-	// attach wl_surface to xdg_wmbase to get toplevel
-	// handle
+	// attach wl_surface to xdg_wmbase to get toplevel handle
 	xdgSurface, err := app.xdgWmBase.GetXdgSurface(surface)
 	if err != nil {
-		log.Fatalf("unable to get xdg_surface: %v", err)
+		return errors.WithStack(err)
 	}
 	app.xdgSurface = xdgSurface
-	logPrintln("got xdg_surface")
-
-	// Add xdg_surface configure handler `app.HandleSurfaceConfigure`
 	xdgSurface.SetConfigureHandler(app.HandleSurfaceConfigure)
-	logPrintln("added configure handler")
 
-	// Get toplevel
 	xdgTopLevel, err := xdgSurface.GetToplevel()
 	if err != nil {
-		log.Fatalf("unable to get xdg_toplevel: %v", err)
+		return errors.WithStack(err)
 	}
 	app.xdgTopLevel = xdgTopLevel
-	logPrintln("got xdg_toplevel")
-
-	// Add xdg_toplevel configure handler for window resizing
-	xdgTopLevel.SetConfigureHandler(app.HandleToplevelConfigure)
-	// Add xdg_toplevel close handler
+	xdgTopLevel.SetConfigureHandler(app.HandleToplevelConfigure) // for window resize
 	xdgTopLevel.SetCloseHandler(app.HandleToplevelClose)
 
-	// Set title
-	if err2 := xdgTopLevel.SetTitle(app.title); err2 != nil {
-		log.Fatalf("unable to set toplevel title: %v", err2)
+	if err := xdgTopLevel.SetTitle(app.title); err != nil {
+		return errors.WithStack(err)
 	}
-	// Set appID
-	if err2 := xdgTopLevel.SetAppId(app.appID); err2 != nil {
-		log.Fatalf("unable to set toplevel appID: %v", err2)
+	if err := xdgTopLevel.SetAppId(app.appID); err != nil {
+		return errors.WithStack(err)
 	}
-	// Commit the state changes (title & appID) to the server
-	if err2 := app.surface.Commit(); err2 != nil {
-		log.Fatalf("unable to commit surface state: %v", err2)
+	if err := app.surface.Commit(); err != nil {
+		return errors.WithStack(err)
 	}
+
+	return nil
 }
 
 func (app *appState) dispatch() {
