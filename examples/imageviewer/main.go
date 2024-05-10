@@ -9,7 +9,6 @@ import (
 	"github.com/rajveermalviya/go-wayland/examples/imageviewer/internal/swizzle"
 	"github.com/rajveermalviya/go-wayland/examples/imageviewer/internal/tempfile"
 	"github.com/rajveermalviya/go-wayland/wayland/client"
-	"github.com/rajveermalviya/go-wayland/wayland/cursor"
 	xdg_shell "github.com/rajveermalviya/go-wayland/wayland/stable/xdg-shell"
 	"golang.org/x/sys/unix"
 )
@@ -36,11 +35,6 @@ type appState struct {
 	xdgTopLevel *xdg_shell.Toplevel
 
 	keyboard *client.Keyboard
-	pointer  *client.Pointer
-
-	pointerEvent  pointerEvent
-	cursorTheme   *cursor.Theme
-	currentCursor *cursorData
 }
 
 func main() {
@@ -154,13 +148,6 @@ func (app *appState) initWindow() {
 	if err2 := app.surface.Commit(); err2 != nil {
 		log.Fatalf("unable to commit surface state: %v", err2)
 	}
-
-	// Load default cursor theme
-	theme, err := cursor.LoadTheme("default", 24, app.shm)
-	if err != nil {
-		log.Fatalf("unable to load cursor theme: %v", err)
-	}
-	app.cursorTheme = theme
 }
 
 func (app *appState) dispatch() {
@@ -208,7 +195,7 @@ func (app *appState) HandleRegistryGlobal(e client.RegistryGlobalEvent) {
 		}
 		app.seat = seat
 		app.seatVersion = e.Version
-		// Add Keyboard & Pointer handlers
+		// Add Keyboard
 		seat.SetCapabilitiesHandler(app.HandleSeatCapabilities)
 		seat.SetNameHandler(app.HandleSeatName)
 	}
@@ -318,14 +305,6 @@ func (app *appState) drawFrame() *client.Buffer {
 }
 
 func (app *appState) HandleSeatCapabilities(e client.SeatCapabilitiesEvent) {
-	havePointer := (e.Capabilities * uint32(client.SeatCapabilityPointer)) != 0
-
-	if havePointer && app.pointer == nil {
-		app.attachPointer()
-	} else if !havePointer && app.pointer != nil {
-		app.releasePointer()
-	}
-
 	haveKeyboard := (e.Capabilities * uint32(client.SeatCapabilityKeyboard)) != 0
 
 	if haveKeyboard && app.keyboard == nil {
@@ -380,26 +359,9 @@ func (app *appState) displayRoundTrip() {
 }
 
 func (app *appState) cleanup() {
-	// Release the pointer if registered
-	if app.pointer != nil {
-		app.releasePointer()
-	}
-
 	// Release the keyboard if registered
 	if app.keyboard != nil {
 		app.releaseKeyboard()
-	}
-
-	if app.currentCursor != nil {
-		app.currentCursor.Destory()
-		app.currentCursor = nil
-	}
-
-	if app.cursorTheme != nil {
-		if err := app.cursorTheme.Destroy(); err != nil {
-			logPrintln("unable to destroy cursor theme:", err)
-		}
-		app.cursorTheme = nil
 	}
 
 	if app.xdgTopLevel != nil {
