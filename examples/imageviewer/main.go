@@ -1,11 +1,13 @@
 package main
 
 import (
+	"fmt"
 	"image"
 	"log"
 	"os"
 
 	"github.com/nfnt/resize"
+	"github.com/pkg/errors"
 	"github.com/rajveermalviya/go-wayland/examples/imageviewer/internal/swizzle"
 	"github.com/rajveermalviya/go-wayland/examples/imageviewer/internal/tempfile"
 	"github.com/rajveermalviya/go-wayland/wayland/client"
@@ -38,8 +40,15 @@ type appState struct {
 }
 
 func main() {
+	if err := run(); err != nil {
+		fmt.Fprintf(os.Stderr, "%+v\n", err)
+		os.Exit(1)
+	}
+}
+
+func run() error {
 	if len(os.Args) != 2 {
-		log.Fatalf("usage: %s file.jpg", os.Args[0])
+		return errors.Errorf("usage: %s file.jpg", os.Args[0])
 	}
 
 	fileName := os.Args[1]
@@ -74,6 +83,7 @@ func main() {
 
 	logPrintln("closing")
 	app.cleanup()
+	return nil
 }
 
 func (app *appState) initWindow() {

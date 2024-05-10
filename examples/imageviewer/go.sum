@@ -1,5 +1,7 @@
 github.com/nfnt/resize v0.0.0-20180221191011-83c6a9932646 h1:zYyBkD/k9seD2A7fsi6Oo2LfFZAehjjQMERAvZLEDnQ=
 github.com/nfnt/resize v0.0.0-20180221191011-83c6a9932646/go.mod h1:jpp1/29i3P1S/RLdc7JQKbRpFeM1dOBd8T9ki5s+AY8=
+github.com/pkg/errors v0.9.1 h1:FEBLx1zS214owpjy7qsBeixbURkuhQAwrK5UwLGTwt4=
+github.com/pkg/errors v0.9.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
 github.com/rajveermalviya/go-wayland/wayland v0.0.0-20230130180959-d756ac1b56f0 h1:fys73hol53b1FsW36R3mW2/6gi7wWzMuomgYVtFHE0I=
 github.com/rajveermalviya/go-wayland/wayland v0.0.0-20230130180959-d756ac1b56f0/go.mod h1:DK7Q1NjBctRTVbrXi+e1u+3EgBRv0RcPuXSLXHC8QJg=
 github.com/yuin/goldmark v1.4.13/go.mod h1:6yULJ656Px+3vBD8DxQVa3kxgyrAnzto9xy5taEt/CY=
