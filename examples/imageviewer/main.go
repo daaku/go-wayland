@@ -442,11 +442,7 @@ func (app *appState) attachKeyboard() {
 		log.Fatal("unable to register keyboard interface")
 	}
 	app.keyboard = keyboard
-
 	keyboard.SetKeyHandler(app.HandleKeyboardKey)
-	keyboard.SetKeymapHandler(app.HandleKeyboardKeymap)
-
-	logPrintln("keyboard interface registered")
 }
 
 func (app *appState) releaseKeyboard() {
@@ -461,30 +457,6 @@ func (app *appState) HandleKeyboardKey(e client.KeyboardKeyEvent) {
 	if e.Key == 1 {
 		app.exit = true
 	}
-}
-
-func (app *appState) HandleKeyboardKeymap(e client.KeyboardKeymapEvent) {
-	defer unix.Close(e.Fd)
-
-	// flags := unix.MAP_SHARED
-	// if app.seatVersion >= 7 {
-	// 	flags = unix.MAP_PRIVATE
-	// }
-
-	// buf, err := unix.Mmap(
-	// 	e.Fd,
-	// 	0,
-	// 	int(e.Size),
-	// 	unix.PROT_READ,
-	// 	flags,
-	// )
-	// if err != nil {
-	// 	log.Printf("failed to mmap keymap: %v\n", err)
-	// 	return
-	// }
-	// defer unix.Munmap(buf)
-
-	// fmt.Println(string(buf))
 }
 
 func rgbaImageFromFile(filePath string) (*image.RGBA, error) {
