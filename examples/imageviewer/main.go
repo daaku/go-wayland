@@ -245,8 +245,8 @@ func (app *appState) drawFrame() *client.Buffer {
 		log.Fatalf("unable to create a temporary file: %v", err)
 	}
 	defer func() {
-		if err2 := file.Close(); err2 != nil {
-			logPrintf("unable to close file: %v", err2)
+		if err := file.Close(); err != nil {
+			logPrintf("unable to close file: %v", err)
 		}
 	}()
 
@@ -255,8 +255,8 @@ func (app *appState) drawFrame() *client.Buffer {
 		log.Fatalf("unable to create mapping: %v", err)
 	}
 	defer func() {
-		if err2 := unix.Munmap(data); err2 != nil {
-			logPrintf("unable to delete mapping: %v", err2)
+		if err := unix.Munmap(data); err != nil {
+			logPrintf("unable to delete mapping: %v", err)
 		}
 	}()
 
@@ -265,8 +265,8 @@ func (app *appState) drawFrame() *client.Buffer {
 		log.Fatalf("unable to create shm pool: %v", err)
 	}
 	defer func() {
-		if err2 := pool.Destroy(); err2 != nil {
-			logPrintf("unable to destroy shm pool: %v", err2)
+		if err := pool.Destroy(); err != nil {
+			logPrintf("unable to destroy shm pool: %v", err)
 		}
 	}()
 
