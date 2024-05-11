@@ -91,7 +91,6 @@ func run() error {
 		app.dispatch()
 	}
 
-	logPrintln("closing")
 	app.cleanup()
 	return nil
 }
@@ -159,8 +158,6 @@ func (app *appState) context() *client.Context {
 }
 
 func (app *appState) HandleRegistryGlobal(e client.RegistryGlobalEvent) {
-	logPrintf("discovered an interface: %q\n", e.Interface)
-
 	switch e.Interface {
 	case "wl_compositor":
 		compositor := client.NewCompositor(app.context())
@@ -176,8 +173,6 @@ func (app *appState) HandleRegistryGlobal(e client.RegistryGlobalEvent) {
 			log.Fatalf("unable to bind wl_shm interface: %v", err)
 		}
 		app.shm = shm
-
-		shm.SetFormatHandler(app.HandleShmFormat)
 	case "xdg_wm_base":
 		xdgWmBase := xdg_shell.NewWmBase(app.context())
 		err := app.registry.Bind(e.Name, e.Interface, e.Version, xdgWmBase)
@@ -185,7 +180,6 @@ func (app *appState) HandleRegistryGlobal(e client.RegistryGlobalEvent) {
 			log.Fatalf("unable to bind xdg_wm_base interface: %v", err)
 		}
 		app.xdgWmBase = xdgWmBase
-		// Add xdg_wmbase ping handler
 		xdgWmBase.SetPingHandler(app.HandleWmBasePing)
 	case "wl_seat":
 		seat := client.NewSeat(app.context())
@@ -194,17 +188,11 @@ func (app *appState) HandleRegistryGlobal(e client.RegistryGlobalEvent) {
 			log.Fatalf("unable to bind wl_seat interface: %v", err)
 		}
 		app.seat = seat
-		// Add Keyboard
 		seat.SetCapabilitiesHandler(app.HandleSeatCapabilities)
 	}
 }
 
-func (app *appState) HandleShmFormat(e client.ShmFormatEvent) {
-	logPrintf("supported pixel format: %v\n", client.ShmFormat(e.Format))
-}
-
 func (app *appState) HandleSurfaceConfigure(e xdg_shell.SurfaceConfigureEvent) {
-	// Send ack to xdg_surface that we have a frame.
 	if err := app.xdgSurface.AckConfigure(e.Serial); err != nil {
 		log.Fatal("unable to ack xdg surface configure")
 	}
@@ -213,14 +201,10 @@ func (app *appState) HandleSurfaceConfigure(e xdg_shell.SurfaceConfigureEvent) {
 		return
 	}
 
-	// Draw frame
 	buffer := app.drawFrame()
-
-	// Attach new frame to the surface
 	if err := app.surface.Attach(buffer, 0, 0); err != nil {
 		log.Fatalf("unable to attach buffer to surface: %v", err)
 	}
-	// Commit the surface state
 	if err := app.surface.Commit(); err != nil {
 		log.Fatalf("unable to commit surface state: %v", err)
 	}
@@ -242,9 +226,7 @@ func (app *appState) HandleToplevelConfigure(e xdg_shell.ToplevelConfigureEvent)
 
 	// Resize the proxy image to new frame size
 	// and set it to frame image
-	logPrintln("resizing frame")
 	app.frame = resize.Resize(uint(width), uint(height), app.pImage, resize.Bilinear).(*image.RGBA)
-	logPrintln("done resizing frame")
 
 	// Update app size
 	app.width = width
@@ -331,19 +313,18 @@ func (app *appState) HandleToplevelClose(xdg_shell.ToplevelCloseEvent) {
 }
 
 func (app *appState) displayRoundTrip() {
-	// Get display sync callback
 	callback, err := app.display.Sync()
 	if err != nil {
 		log.Fatalf("unable to get sync callback: %v", err)
 	}
 	defer func() {
-		if err2 := callback.Destroy(); err2 != nil {
-			logPrintln("unable to destroy callback:", err2)
+		if err := callback.Destroy(); err != nil {
+			logPrintln("unable to destroy callback:", err)
 		}
 	}()
 
 	done := false
-	callback.SetDoneHandler(func(_ client.CallbackDoneEvent) {
+	callback.SetDoneHandler(func(client.CallbackDoneEvent) {
 		done = true
 	})
 
@@ -422,7 +403,6 @@ func (app *appState) cleanup() {
 		}
 	}
 
-	// Close the wayland server connection
 	if err := app.context().Close(); err != nil {
 		logPrintln("unable to close wayland context:", err)
 	}
