@@ -322,14 +322,11 @@ func (*appState) HandleDisplayError(e client.DisplayErrorEvent) {
 	log.Fatalf("display error event: %v", e)
 }
 
-// HandleWmBasePing handles xdg ping by doing a Pong request
 func (app *appState) HandleWmBasePing(e xdg_shell.WmBasePingEvent) {
-	logPrintf("xdg_wmbase ping: serial=%v", e.Serial)
 	app.xdgWmBase.Pong(e.Serial)
-	logPrintln("xdg_wmbase pong sent")
 }
 
-func (app *appState) HandleToplevelClose(_ xdg_shell.ToplevelCloseEvent) {
+func (app *appState) HandleToplevelClose(xdg_shell.ToplevelCloseEvent) {
 	app.exit = true
 }
 
