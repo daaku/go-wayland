@@ -3,8 +3,16 @@ package main
 import (
 	"fmt"
 	"image"
+	"image/draw"
 	"log"
 	"os"
+
+	_ "image/jpeg"
+	_ "image/png"
+
+	_ "golang.org/x/image/bmp"
+	_ "golang.org/x/image/tiff"
+	_ "golang.org/x/image/webp"
 
 	"github.com/nfnt/resize"
 	"github.com/pkg/errors"
@@ -427,5 +435,95 @@ func (app *appState) cleanup() {
 	// Close the wayland server connection
 	if err := app.context().Close(); err != nil {
 		logPrintln("unable to close wayland context:", err)
+	}
+}
+
+func (app *appState) attachKeyboard() {
+	keyboard, err := app.seat.GetKeyboard()
+	if err != nil {
+		log.Fatal("unable to register keyboard interface")
+	}
+	app.keyboard = keyboard
+
+	keyboard.SetKeyHandler(app.HandleKeyboardKey)
+	keyboard.SetKeymapHandler(app.HandleKeyboardKeymap)
+
+	logPrintln("keyboard interface registered")
+}
+
+func (app *appState) releaseKeyboard() {
+	if err := app.keyboard.Release(); err != nil {
+		logPrintln("unable to release keyboard interface")
+	}
+	app.keyboard = nil
+
+	logPrintln("keyboard interface released")
+}
+
+func (app *appState) HandleKeyboardKey(e client.KeyboardKeyEvent) {
+	// close on "esc"
+	if e.Key == 1 {
+		app.exit = true
+	}
+}
+
+func (app *appState) HandleKeyboardKeymap(e client.KeyboardKeymapEvent) {
+	defer unix.Close(e.Fd)
+
+	// flags := unix.MAP_SHARED
+	// if app.seatVersion >= 7 {
+	// 	flags = unix.MAP_PRIVATE
+	// }
+
+	// buf, err := unix.Mmap(
+	// 	e.Fd,
+	// 	0,
+	// 	int(e.Size),
+	// 	unix.PROT_READ,
+	// 	flags,
+	// )
+	// if err != nil {
+	// 	log.Printf("failed to mmap keymap: %v\n", err)
+	// 	return
+	// }
+	// defer unix.Munmap(buf)
+
+	// fmt.Println(string(buf))
+}
+
+func rgbaImageFromFile(filePath string) (*image.RGBA, error) {
+	f, err := os.Open(filePath)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+
+	img, _, err := image.Decode(f)
+	if err != nil {
+		return nil, err
+	}
+
+	rgbaImage, ok := img.(*image.RGBA)
+	if !ok {
+		// Convert to RGBA if not already RGBA
+		rect := img.Bounds()
+		rgbaImage = image.NewRGBA(rect)
+		draw.Draw(rgbaImage, rect, img, rect.Min, draw.Src)
+	}
+
+	return rgbaImage, nil
+}
+
+var logDisabled = os.Getenv("LOG_DISABLED") == "1"
+
+func logPrintln(v ...interface{}) {
+	if !logDisabled {
+		log.Println(v...)
+	}
+}
+
+func logPrintf(format string, v ...interface{}) {
+	if !logDisabled {
+		log.Printf(format, v...)
 	}
 }
