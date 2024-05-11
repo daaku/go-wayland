@@ -310,7 +310,6 @@ func (app *appState) drawFrame() *client.Buffer {
 
 func (app *appState) HandleSeatCapabilities(e client.SeatCapabilitiesEvent) {
 	haveKeyboard := (e.Capabilities * uint32(client.SeatCapabilityKeyboard)) != 0
-
 	if haveKeyboard && app.keyboard == nil {
 		app.attachKeyboard()
 	} else if !haveKeyboard && app.keyboard != nil {
@@ -363,7 +362,6 @@ func (app *appState) displayRoundTrip() {
 }
 
 func (app *appState) cleanup() {
-	// Release the keyboard if registered
 	if app.keyboard != nil {
 		app.releaseKeyboard()
 	}
@@ -456,8 +454,6 @@ func (app *appState) releaseKeyboard() {
 		logPrintln("unable to release keyboard interface")
 	}
 	app.keyboard = nil
-
-	logPrintln("keyboard interface released")
 }
 
 func (app *appState) HandleKeyboardKey(e client.KeyboardKeyEvent) {
