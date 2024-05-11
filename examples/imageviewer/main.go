@@ -234,7 +234,6 @@ func (app *appState) HandleToplevelConfigure(e xdg_shell.ToplevelConfigureEvent)
 }
 
 func (app *appState) drawFrame() *client.Buffer {
-	logPrintln("drawing frame")
 	app.skipDraw = true
 
 	stride := app.width * 4
@@ -285,7 +284,6 @@ func (app *appState) drawFrame() *client.Buffer {
 		}
 	})
 
-	logPrintln("drawing frame complete")
 	return buf
 }
 
