@@ -196,7 +196,6 @@ func (app *appState) HandleRegistryGlobal(e client.RegistryGlobalEvent) {
 		app.seat = seat
 		// Add Keyboard
 		seat.SetCapabilitiesHandler(app.HandleSeatCapabilities)
-		seat.SetNameHandler(app.HandleSeatName)
 	}
 }
 
@@ -315,10 +314,6 @@ func (app *appState) HandleSeatCapabilities(e client.SeatCapabilitiesEvent) {
 	} else if !haveKeyboard && app.keyboard != nil {
 		app.releaseKeyboard()
 	}
-}
-
-func (*appState) HandleSeatName(e client.SeatNameEvent) {
-	logPrintf("seat name: %v", e.Name)
 }
 
 // HandleDisplayError handles client.Display errors
