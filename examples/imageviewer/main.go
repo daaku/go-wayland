@@ -279,7 +279,7 @@ func (app *appState) drawFrame() *client.Buffer {
 	copy(data, app.frame.Pix)
 	swizzle.BGRA(data)
 
-	buf.SetReleaseHandler(func(_ client.BufferReleaseEvent) {
+	buf.SetReleaseHandler(func(client.BufferReleaseEvent) {
 		if err := buf.Destroy(); err != nil {
 			logPrintf("unable to destroy buffer: %v", err)
 		}
