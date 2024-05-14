@@ -17,7 +17,6 @@ import (
 	"github.com/daaku/swizzle"
 	"github.com/nfnt/resize"
 	"github.com/pkg/errors"
-	"github.com/rajveermalviya/go-wayland/examples/imageviewer/internal/tempfile"
 	"github.com/rajveermalviya/go-wayland/wayland/client"
 	xdg_shell "github.com/rajveermalviya/go-wayland/wayland/stable/xdg-shell"
 	"golang.org/x/sys/unix"
@@ -239,7 +238,7 @@ func (app *appState) drawFrame() *client.Buffer {
 	stride := app.width * 4
 	size := stride * app.height
 
-	file, err := tempfile.Create(int64(size))
+	file, err := anonTempFile(int64(size))
 	if err != nil {
 		log.Fatalf("unable to create a temporary file: %v", err)
 	}
@@ -450,6 +449,26 @@ func rgbaImageFromFile(filePath string) (*image.RGBA, error) {
 	}
 
 	return rgbaImage, nil
+}
+
+func anonTempFile(size int64) (*os.File, error) {
+	dir := os.Getenv("XDG_RUNTIME_DIR")
+	if dir == "" {
+		return nil, errors.New("XDG_RUNTIME_DIR is not defined in env")
+	}
+	file, err := os.CreateTemp(dir, "wl_shm_go_*")
+	if err != nil {
+		return nil, err
+	}
+	err = file.Truncate(size)
+	if err != nil {
+		return nil, err
+	}
+	err = os.Remove(file.Name())
+	if err != nil {
+		return nil, err
+	}
+	return file, nil
 }
 
 var logDisabled = os.Getenv("LOG_DISABLED") == "1"
