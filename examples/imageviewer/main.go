@@ -45,10 +45,16 @@ func main() {
 }
 
 func run() error {
-	dc := gg.NewContext(1000, 1000)
+	const S = 1000
+	dc := gg.NewContext(S, S)
 	dc.DrawCircle(500, 500, 400)
-	dc.SetRGB(0, 0, 0)
+	dc.SetRGB(128, 0, 0)
 	dc.Fill()
+	dc.SetRGB(255, 255, 255)
+	if err := dc.LoadFontFace("/usr/share/fonts/TTF/Roboto-Black.ttf", 96); err != nil {
+		return errors.WithStack(err)
+	}
+	dc.DrawStringAnchored("Hello, world!", S/2, S/2, 0.5, 0.5)
 	frameImage := dc.Image().(*image.RGBA)
 	frameRect := frameImage.Bounds()
 
