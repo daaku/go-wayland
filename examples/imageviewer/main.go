@@ -14,9 +14,9 @@ import (
 	_ "golang.org/x/image/tiff"
 	_ "golang.org/x/image/webp"
 
+	"github.com/daaku/swizzle"
 	"github.com/nfnt/resize"
 	"github.com/pkg/errors"
-	"github.com/rajveermalviya/go-wayland/examples/imageviewer/internal/swizzle"
 	"github.com/rajveermalviya/go-wayland/examples/imageviewer/internal/tempfile"
 	"github.com/rajveermalviya/go-wayland/wayland/client"
 	xdg_shell "github.com/rajveermalviya/go-wayland/wayland/stable/xdg-shell"

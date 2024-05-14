@@ -9,3 +9,5 @@ require (
 	golang.org/x/image v0.3.0
 	golang.org/x/sys v0.0.0-20220722155257-8c9f86f7a55f
 )
+
+require github.com/daaku/swizzle v0.1.0 // indirect
