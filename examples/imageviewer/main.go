@@ -3,19 +3,11 @@ package main
 import (
 	"fmt"
 	"image"
-	"image/draw"
 	"log"
 	"os"
 
-	_ "image/jpeg"
-	_ "image/png"
-
-	_ "golang.org/x/image/bmp"
-	_ "golang.org/x/image/tiff"
-	_ "golang.org/x/image/webp"
-
 	"github.com/daaku/swizzle"
-	"github.com/nfnt/resize"
+	"github.com/fogleman/gg"
 	"github.com/pkg/errors"
 	"github.com/rajveermalviya/go-wayland/wayland/client"
 	xdg_shell "github.com/rajveermalviya/go-wayland/wayland/stable/xdg-shell"
@@ -26,7 +18,6 @@ import (
 type appState struct {
 	appID         string
 	title         string
-	pImage        *image.RGBA
 	width, height int32
 	frame         *image.RGBA
 	exit          bool
@@ -54,28 +45,16 @@ func main() {
 }
 
 func run() error {
-	if len(os.Args) != 2 {
-		return errors.Errorf("usage: %s file.jpg", os.Args[0])
-	}
-
-	fileName := os.Args[1]
-
-	// Read the image file to *image.RGBA
-	pImage, err := rgbaImageFromFile(fileName)
-	if err != nil {
-		return errors.WithStack(err)
-	}
-
-	// Resize again, for first frame
-	frameImage := resize.Resize(0, uint(pImage.Rect.Dy()), pImage, resize.NearestNeighbor).(*image.RGBA)
+	dc := gg.NewContext(1000, 1000)
+	dc.DrawCircle(500, 500, 400)
+	dc.SetRGB(0, 0, 0)
+	dc.Fill()
+	frameImage := dc.Image().(*image.RGBA)
 	frameRect := frameImage.Bounds()
 
 	app := &appState{
-		// Set the title to `cat.jpg - imageviewer`
-		title: fileName + " - imageviewer",
-		appID: "osd_imageviewer",
-		// Keep proxy image in cache, for use in resizing
-		pImage: pImage,
+		title:  "gg",
+		appID:  "osd_imageviewer",
 		width:  int32(frameRect.Dx()),
 		height: int32(frameRect.Dy()),
 		frame:  frameImage,
@@ -222,10 +201,6 @@ func (app *appState) HandleToplevelConfigure(e xdg_shell.ToplevelConfigureEvent)
 		// No need to resize
 		return
 	}
-
-	// Resize the proxy image to new frame size
-	// and set it to frame image
-	app.frame = resize.Resize(uint(width), uint(height), app.pImage, resize.Bilinear).(*image.RGBA)
 
 	// Update app size
 	app.width = width
@@ -426,29 +401,6 @@ func (app *appState) HandleKeyboardKey(e client.KeyboardKeyEvent) {
 	if e.Key == 1 {
 		app.exit = true
 	}
-}
-
-func rgbaImageFromFile(filePath string) (*image.RGBA, error) {
-	f, err := os.Open(filePath)
-	if err != nil {
-		return nil, err
-	}
-	defer f.Close()
-
-	img, _, err := image.Decode(f)
-	if err != nil {
-		return nil, err
-	}
-
-	rgbaImage, ok := img.(*image.RGBA)
-	if !ok {
-		// Convert to RGBA if not already RGBA
-		rect := img.Bounds()
-		rgbaImage = image.NewRGBA(rect)
-		draw.Draw(rgbaImage, rect, img, rect.Min, draw.Src)
-	}
-
-	return rgbaImage, nil
 }
 
 func anonTempFile(size int64) (*os.File, error) {
